@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4; /* Light grey background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff; /* White background for container */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 600px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #6a0dad; /* Light purple */
+            text-align: center;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .input-container label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-container input, .input-container select, .input-container button {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        #taskInput, #assignTo {
+            width: calc(100% - 22px);
+        }
+
+        #addTaskButton {
+            background-color: #6a0dad; /* Light purple */
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #addTaskButton:hover {
+            background-color: #580f8f; /* Darker purple */
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background-color: #eaeaea; /* Light grey background for tasks */
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #9e9e9e;
+        }
+
+        .complete-button {
+            background-color: #6a0dad; /* Light purple */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .complete-button:hover {
+            background-color: #580f8f; /* Darker purple */
+        }
+
+        .remove-button {
+            background-color: #c0c0c0; /* Grey */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .remove-button:hover {
+            background-color: #a0a0a0; /* Darker grey */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Task Manager</h1>
+
+        <div class="input-container">
+            <label for="taskInput">Assign a Task</label>
+            <input type="text" id="taskInput" placeholder="Enter task here">
+            <label for="assignTo">Assign to</label>
+            <select id="assignTo">
+                <option value="John">John</option>
+                <option value="Jane">Jane</option>
+                <option value="Alex">Alex</option>
+            </select>
+            <button id="addTaskButton">Add Task</button>
+        </div>
+
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskInput = document.getElementById('taskInput');
+            const assignTo = document.getElementById('assignTo');
+            const addTaskButton = document.getElementById('addTaskButton');
+            const taskList = document.getElementById('taskList');
+
+            // Load tasks from local storage
+            const loadTasks = () => {
+                const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+                tasks.forEach(task => addTaskToList(task.text, task.assignedTo, task.completed));
+            };
+
+            // Save tasks to local storage
+            const saveTasks = () => {
+                const tasks = [];
+                document.querySelectorAll('#taskList li').forEach(taskItem => {
+                    const taskText = taskItem.querySelector('.task-text').textContent;
+                    const assignedTo = taskItem.querySelector('.task-text').dataset.assignedTo;
+                    const completed = taskItem.classList.contains('completed');
+                    tasks.push({ text: taskText, assignedTo, completed });
+                });
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            };
+
+            // Function to add a task to the list
+            const addTaskToList = (taskText, assignedTo, completed = false) => {
+                const taskItem = document.createElement('li');
+                taskItem.classList.toggle('completed', completed);
+                taskItem.innerHTML = `
+                    <span class="task-text" data-assigned-to="${assignedTo}">${taskText} (Assigned to: ${assignedTo})</span>
+                    <div>
+                        <button class="complete-button">${completed ? '✔️ Completed' : 'Complete'}</button>
+                        <button class="remove-button">Remove</button>
+                    </div>
+                `;
+                taskList.appendChild(taskItem);
+
+                // Add event listeners for buttons
+                taskItem.querySelector('.complete-button').addEventListener('click', () => {
+                    taskItem.classList.toggle('completed');
+                    taskItem.querySelector('.complete-button').textContent = taskItem.classList.contains('completed') ? '✔️ Completed' : 'Complete';
+                    saveTasks();
+                });
+
+                taskItem.querySelector('.remove-button').addEventListener('click', () => {
+                    taskItem.remove();
+                    saveTasks();
+                });
+            };
+
+            // Add task on button click
+            addTaskButton.addEventListener('click', () => {
+                const taskText = taskInput.value.trim();
+                const assignedTo = assignTo.value;
+                if (taskText) {
+                    addTaskToList(taskText, assignedTo);
+                    taskInput.value = '';
+                    saveTasks();
+                }
+            });
+
+            // Load tasks on page load
+            loadTasks();
+        });
+    </script>
+</body>
+</html>
